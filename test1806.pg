@@ -1,0 +1,24 @@
+.PROGRAM test1806()
+   SPEED 30
+   ACCURACY 1
+   JMOVE TRANS(-144.46300000000002,-458.32899999999995,-70,0,0,0)
+   TDRAW 0,0,0,0,0,1.506
+   TDRAW 0,0,0,-30,0,0
+   POINT current_pose = HERE
+   current_O = DEXT(current_pose, 4)
+   current_A = DEXT(current_pose, 5)
+   current_T = DEXT(current_pose, 6)
+   LMOVE TRANS(-382.113,-249.398,313.000,current_O,current_A,current_T)
+   LMOVE TRANS(-539.685,-245.255,313.000,current_O,current_A,current_T)
+   JMOVE TRANS(-1.44e+02,-4.58e+02,-70,0,0,0)
+   TDRAW 0,0,0,0,0,178.494
+   TDRAW 0,0,0,-30,0,0
+   POINT current_pose = HERE
+   current_O = DEXT(current_pose, 4)
+   current_A = DEXT(current_pose, 5)
+   current_T = DEXT(current_pose, 6)
+   LMOVE TRANS(-534.256,-39.398,313.000,current_O,current_A,current_T)
+   LMOVE TRANS(-376.685,-43.541,313.000,current_O,current_A,current_T)
+   JMOVE TRANS(-1.44e+02,-4.58e+02,-70,0,0,0)
+   JMOVE TRANS(-31.694,-275.494,-137.533,0,0,0)
+.END
