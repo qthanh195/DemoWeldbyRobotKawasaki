@@ -1,4 +1,4 @@
-# Robot Welding Camera Project
+# Demo of welding seam motion detected by kawasaki rs005l robot using basler camera
 
 This project implements a robotic welding system that utilizes a camera for monitoring and control. The system is designed to automate the welding process, ensuring precision and efficiency.
 
@@ -64,4 +64,4 @@ pytest tests/
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+---

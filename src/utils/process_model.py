@@ -47,7 +47,8 @@ class ProcessModel:
                         rect = cv2.minAreaRect(cnt)
                         box = cv2.boxPoints(rect)
                         box = np.int32(box)
-
+                        
+                        # x, y, w, h = cv2.boundingRect(cnt)
                         # print(w, h)
                         def sort_box_points_clockwise(box):
                             # Chuyển sang mảng numpy nếu cần

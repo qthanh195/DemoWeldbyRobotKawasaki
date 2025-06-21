@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import math
+from scipy.spatial.transform import Rotation as R
 
 
 def generate_points_on_line(p1, p2, step=70):
@@ -35,15 +36,36 @@ def generate_points_on_line(p1, p2, step=70):
 
     return points
 
-def camera_to_robot(p):
-        # chuyen tu pixel sang mm voi 7pixel = 1mm
-        x_c, y_c = p[0], p[1]
-        x_c, y_c = round(x_c/7, 3), round(y_c/7, 3)
-        
-        tx, ty = -306.112, -121.542
-        x_r = y_c + tx
-        y_r = -x_c + ty
-        return x_r, y_r
+def pixel_to_robot(p, pixel_per_mm=7, image_size=(3848, 2748), invert_x=False, invert_y=False):
+    """
+    Chuyển từ tọa độ pixel sang tọa độ robot (mm), với tuỳ chọn đảo trục X hoặc Y.
+
+    Args:
+        px, py: Tọa độ pixel trên ảnh
+        pixel_per_mm: 7 px = 1 mm
+        image_size: (width, height) của ảnh
+        invert_x: nếu True, đảo trục X (robot X ngược với camera X)
+        invert_y: nếu True, đảo trục Y
+
+    Returns:
+        (x_mm, y_mm): Tọa độ robot tính theo mm
+    """
+    px, py = p[0], p[1]
+    cx, cy = image_size[0] // 2, image_size[1] // 2
+
+    dx = px - cx
+    dy = py - cy
+
+    if invert_x:
+        dx = -dx
+    if invert_y:
+        dy = -dy
+
+    x_mm = dx / pixel_per_mm
+    y_mm = dy / pixel_per_mm
+
+    return x_mm, y_mm
+
 
 def get_line_directions(p1, p2, center):
     """
@@ -151,17 +173,38 @@ def angle_between_two_lines(p1, p2):
     # Góc (rad → độ)
     angle_rad = np.arccos(dot)
     angle_deg = np.degrees(angle_rad)
+    if p2[0][1]> p2[1][1]:
+        angle_deg += 180
+    
+    
     
     return angle_deg
+
+def euler_xyz_to_oat(rx, ry, rz):
+    """
+    Convert từ góc Euler XYZ sang Euler ZYZ (o,a,t) dùng cho robot Kawasaki
+
+    rx, ry, rz: góc quay theo trục X, Y, Z (đơn vị: độ)
+
+    Returns:
+        o, a, t: tương ứng với TRANS(x, y, z, o, a, t)
+    """
+    # Tạo rotation theo thứ tự Euler XYZ (roll, pitch, yaw)
+    r = R.from_euler('xyz', [rx, ry, rz], degrees=True)
+
+    # Chuyển sang Euler ZYZ (dạng của Kawasaki)
+    o, a, t = r.as_euler('ZYZ', degrees=True)
+    return o, a, t
 
 def create_program(file_path, program_name, line1, line2,center,rz_line1, rz_line2):
     with open(file_path, 'w') as file:
         file.write(f".PROGRAM {program_name}()\n")
         file.write(f"   SPEED 30\n")
         file.write(f"   ACCURACY 1\n")
-        file.write(f"   JMOVE TRANS({center[0]},{center[1]},-70,0,0,0)\n")
+        file.write(f"   BASE TRANS(434.862, 151696.000, -285.698, 0.001, 179.381, -90.000)\n")
+        file.write(f"   JMOVE TRANS({center[0]},{center[1]},-300,0,0,0)\n")
         file.write(f"   TDRAW 0,0,0,0,0,{rz_line1:.3f}\n")
-        file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+        file.write(f"   TDRAW 0,0,0,-20,0,0\n")
 
         file.write(f"   POINT current_pose = HERE\n")
         file.write(f"   current_O = DEXT(current_pose, 4)\n")
@@ -170,11 +213,11 @@ def create_program(file_path, program_name, line1, line2,center,rz_line1, rz_lin
         
         for point in line1:
             x, y = point
-            file.write(f"   LMOVE TRANS({y:.3f},{x:.3f},313.000,current_O,current_A,current_T)\n")
+            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-10.000,current_O,current_A,current_T)\n")
             
-        file.write(f"   JMOVE TRANS({center[0]:.3},{center[1]:.3},-70,0,0,0)\n")
+        file.write(f"   JMOVE TRANS({center[0]:.3},{center[1]:.3},-300,0,0,0)\n")
         file.write(f"   TDRAW 0,0,0,0,0,{rz_line2:.3f}\n")
-        file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+        file.write(f"   TDRAW 0,0,0,-20,0,0\n")
         
         file.write(f"   POINT current_pose = HERE\n")
         file.write(f"   current_O = DEXT(current_pose, 4)\n")
@@ -183,8 +226,8 @@ def create_program(file_path, program_name, line1, line2,center,rz_line1, rz_lin
         
         for point in line2:
             x, y = point
-            file.write(f"   LMOVE TRANS({y:.3f},{x:.3f},313.000,current_O,current_A,current_T)\n")
-        file.write(f"   JMOVE TRANS({center[0]:.3},{center[1]:.3},-70,0,0,0)\n")
-        file.write(f"   JMOVE TRANS(-31.694,-275.494,-137.533,0,0,0)\n")
+            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-10.000,current_O,current_A,current_T)\n")
+        file.write(f"   JMOVE TRANS({center[0]:.3},{center[1]:.3},-300,0,0,0)\n")
+        file.write(f"   JMOVE TRANS(-126,192,-266,0,0,0)\n")
         file.write(f".END\n")
         

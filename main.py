@@ -57,12 +57,12 @@ def control_robot():
 def test():
     from src.utils.process_model import ProcessModel
     import cv2
-    from src.utils.convert_point import generate_points_on_line, camera_to_robot, get_line_directions, draw_points_with_xy_direction, get_rx_ry_rz, angle_between_two_lines, create_program
-
+    from src.utils.convert_point import generate_points_on_line, pixel_to_robot, get_line_directions, draw_points_with_xy_direction, euler_xyz_to_oat, angle_between_two_lines, create_program
+    from  src.utils.view import draw_robot_points
     model = ProcessModel()
 
-    center,line = model.r_d("E:/2. GE/24. Kawasaki Robot\image1\img_20250614_181038.png")
-    image = cv2.imread("E:/2. GE/24. Kawasaki Robot/image1/img_20250614_181038.png")
+    center,line = model.r_d("E:/2. GE/24. Kawasaki Robot\image1\img_20250614_181118.png")
+    image = cv2.imread("E:/2. GE/24. Kawasaki Robot/image1/img_20250614_181118.png")
     
     points1 = generate_points_on_line(line[0][0], line[0][1], 70)
     dir_line1 = get_line_directions(line[0][0], line[0][1],center)
@@ -72,6 +72,10 @@ def test():
     
     rz_line1 = angle_between_two_lines(((0,0),(500,0)), (line[0][0], line[0][1]))
     rz_line2 = angle_between_two_lines(((0,0),(500,0)), (line[1][0], line[1][1]))
+    line1_oat = euler_xyz_to_oat(0, 0, rz_line1)
+    line2_oat = euler_xyz_to_oat(0, 0, rz_line2)
+    
+    
     
     line1_test = []
     for point in points1:
@@ -102,24 +106,41 @@ def test():
     # for point in points2:
     #     line2.append(camera_to_robot(point[0],point[1]))
     
-    line1 = [camera_to_robot(line[0][0]), camera_to_robot(line[0][1])]
-    line2 = [camera_to_robot(line[1][0]), camera_to_robot(line[1][1])]
+    line1 = [pixel_to_robot(line[0][0]), pixel_to_robot(line[0][1])]
+    line2 = [pixel_to_robot(line[1][0]), pixel_to_robot(line[1][1])]
+    
 
         
-    center_robot = camera_to_robot(center)
-    create_program("test1806.pg","test1806", line1, line2, center_robot, rz_line1, rz_line2)
+    center_robot = pixel_to_robot(center)
     
+    # print("line1: ", line1)
+    # print("line2:", line2)
+    # print("center_robot: ", center_robot)
+    
+    
+    # poins3d = [(line1[0][0],line1[0][1],10), (line1[1][0],line1[1][1],10), (line2[0][0],line2[0][1],10), (line2[1][0],line2[1][1],10), (center_robot[0],center_robot[1],300)]
+    # draw_robot_points(poins3d, "3d", True)
+    create_program("test1806.pg","test1806", line1, line2, center_robot, line1_oat, line)
+    
+
+    cv2.line(image, (0, 1374), (3840, 1374), (0, 255, 0), 2)
+    cv2.line(image, (1920, 0), (1920, 2748), (0, 255, 0), 2)
     cv2.imwrite("test.png", image)
 
 if __name__ == "__main__":
-    import time
-    from src.utils.convert_point import angle_between_two_lines
+    # from src.robot.robot_controller import calibrate_kawasaki_base_from_3_points, euler_xyz_to_oat
+    # user_coordinates = calibrate_kawasaki_base_from_3_points((434.862,151696,-285.698),(436.323,37.110,-285.700),(367.975,37.116,-286.438))
+    # print(user_coordinates)
+    
+    from src.utils.convert_point import euler_xyz_to_oat
+    print(euler_xyz_to_oat(-30, 0, 82.409))
+    
     # main()
     # control_robot()
+    # import time
     # start_time = time.time()
     # test()
     # print("--- %s seconds ---" % (time.time() - start_time))
-    print(angle_between_two_lines(((0,0),(0,500)), ((1865,1072),(1915,1357))))
 
 # 210 pixel = 30mm -> 1 pixel = 0.14285714285714285 mm > 1mm = 7 pixel 
 
@@ -131,3 +152,5 @@ if __name__ == "__main__":
 
 # TRANS(351.747, 595.724, 0, 0, 0, -90)
 # z 322.327
+
+# 1450 pixel = 207mm -> 1 pixel = 0.14285714285714285 mm > 1mm = 7 pixel

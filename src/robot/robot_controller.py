@@ -2,6 +2,8 @@ import socket
 import time
 import json
 import os
+import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 class RobotController:
     def __init__(self, config_path="E:/2. GE/24. Kawasaki Robot\code/robot_weld_vision_demo\src/robot/robot_config.json"):
@@ -78,4 +80,97 @@ class RobotController:
     def stop_program(self):
         return self.send_cmd("ABORT")
     
-  
+def calibrate_kawasaki_base_from_3_points(p0, p1, p2):
+    """
+    Tính base TRANS(x, y, z, o, a, t) từ 3 điểm robot: p0 (origin), p1 (trục X), p2 (trục XY)
+
+    Args:
+        p0: gốc hệ tọa độ mới, dạng (x, y, z)
+        p1: điểm trên trục X
+        p2: điểm trên mặt phẳng X-Y
+
+    Returns:
+        Chuỗi TRANS(x, y, z, o, a, t)
+    """
+
+    # Chuyển về vector numpy
+    p0 = np.array(p0)
+    p1 = np.array(p1)
+    p2 = np.array(p2)
+
+    # Vector trục X mới
+    x_vec = p1 - p0
+    x_vec = x_vec / np.linalg.norm(x_vec)
+
+    # Vector phụ
+    temp_vec = p2 - p0
+
+    # Trục Z = X × temp_vec
+    z_vec = np.cross(x_vec, temp_vec)
+    z_vec = z_vec / np.linalg.norm(z_vec)
+
+    # Trục Y = Z × X
+    y_vec = np.cross(z_vec, x_vec)
+
+    # Ma trận quay: cột là [x, y, z]
+    R_mat = np.column_stack((x_vec, y_vec, z_vec))
+
+    # Chuyển thành OAT (Euler ZYZ)
+    r = R.from_matrix(R_mat)
+    o, a, t = r.as_euler('ZYZ', degrees=True)
+
+    # Lấy vị trí gốc
+    x, y, z = p0
+
+    return f"TRANS({x:.3f}, {y:.3f}, {z:.3f}, {o:.3f}, {a:.3f}, {t:.3f})"
+
+def calibrate_transformation_from_3points(camera_points, robot_points):
+    """
+    Tính TRANS(x, y, z, o, a, t) từ 3 điểm tương ứng giữa hệ camera và hệ robot.
+
+    Args:
+        camera_points: List 3 điểm camera [[x0,y0,z0], [x1,y1,z1], [x2,y2,z2]]
+        robot_points: List 3 điểm robot  [[x0,y0,z0], [x1,y1,z1], [x2,y2,z2]]
+
+    Returns:
+        (x, y, z, o, a, t): tọa độ robot theo chuẩn Kawasaki
+    """
+
+    cam = np.array(camera_points, dtype=np.float64)
+    rob = np.array(robot_points, dtype=np.float64)
+
+    # 1. Gốc tọa độ
+    cam_origin = cam[0]
+    rob_origin = rob[0]
+
+    # 2. Trục X: từ P0 → P1
+    cam_x = cam[1] - cam[0]
+    rob_x = rob[1] - rob[0]
+
+    # 3. Trục Z: pháp tuyến mặt P0-P1-P2
+    cam_z = np.cross(cam[1] - cam[0], cam[2] - cam[0])
+    rob_z = np.cross(rob[1] - rob[0], rob[2] - rob[0])
+
+    # 4. Trục Y: vuông góc X-Z
+    cam_y = np.cross(cam_z, cam_x)
+    rob_y = np.cross(rob_z, rob_x)
+
+    # Chuẩn hóa trục
+    def normalize(v):
+        return v / np.linalg.norm(v)
+
+    R_cam = np.column_stack([normalize(cam_x), normalize(cam_y), normalize(cam_z)])
+    R_rob = np.column_stack([normalize(rob_x), normalize(rob_y), normalize(rob_z)])
+
+    # 5. Ma trận quay từ camera → robot
+    R_transform = R_rob @ R_cam.T  # Vì: R_cam * V_cam = V_local => V_rob = R_rob * V_local
+
+    # 6. Vector tịnh tiến
+    T = rob_origin - R_transform @ cam_origin
+
+    # 7. Chuyển thành góc OAT (Euler ZYZ)
+    r = R.from_matrix(R_transform)
+    o, a, t = r.as_euler('ZYZ', degrees=True)
+
+    x, y, z = T
+    return x, y, z, o, a, t
