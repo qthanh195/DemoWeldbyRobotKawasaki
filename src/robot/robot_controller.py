@@ -5,10 +5,21 @@ import os
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
+###◦
+# 0: Chương trình không trong quá trình thực thi.
+# ◦
+# 1: Chương trình đang chạy.
+# ◦
+# 2: Chương trình đang ở trạng thái giữ (held).
+# ◦
+# 3: Việc thực thi bước (stepper) đã hoàn thành; đang chờ hoàn thành chuyển động của robot.
+
+
 class RobotController:
     def __init__(self, config_path="E:/2. GE/24. Kawasaki Robot\code/robot_weld_vision_demo\src/robot/robot_config.json"):
         self.config = self.load_config(config_path)
         self.bot = None
+        
 
     def load_config(self, config_path):
         if not os.path.exists(config_path):
@@ -20,12 +31,32 @@ class RobotController:
         print("Robot initialized with config:")
         print(self.config)
 
+    def recv_response(self):
+        """Nhận phản hồi từ robot."""
+        # Trong thực tế, bạn sẽ nhận dữ liệu từ socket
+        response = ""
+        while True:
+            response = self.bot.recv(4096).decode(errors='ignore')
+            if response == ">":
+                    break
+        # Vì đây là ví dụ, chúng ta sẽ giả lập phản hồi
+        # return self.send_cmd("SIMULATED_RECEIVE")
+    
     def connect_bot(self):
         try:
             self.bot = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.bot.settimeout(5)  # Timeout để tránh treo khi không phản hồi
             self.bot.connect((self.config['ip'], self.config['port']))
             self.send_cmd("as")  # login
+
+            # Đợi đến khi nhận được dấu nhắc '>'
+            buffer = ""
+            while True:
+                response = self.bot.recv(4096).decode(errors='ignore')
+                buffer += response
+                if ">" in response:
+                    break
+
             print("Đã kết nối với robot.")
         except Exception as e:
             print(f"Lỗi khi kết nối robot: {e}")
@@ -51,25 +82,52 @@ class RobotController:
             print("Hết thời gian chờ phản hồi từ robot.")
         except Exception as e:
             print(f"Lỗi khi gửi lệnh: {e}")
-
+    
     def load_program(self, program_name):
-        # xoa chuowng trinh
-        self.send_cmd("DELETE/P test2006")
-        self.send_cmd("1")
-        
-        self.send_cmd(f"load {program_name}")
+        # program_name = "test1806"
 
-        # while True:
-        #     res = "2"
-        #     # res = self.send_cmd(f'type EXISTPGM ("{program_name}")')
-        #     res=self.send_cmd(f'type EXISTPGM ("test2006")')
-        #     # res = self.bot.recv(4096).decode(errors='ignore')
-        #     print(res)
-        #     if res.strip() == "-1":
-        #         break
+        # Bước 1: Vào chế độ soạn thảo cho chương trình
+        self.send_cmd(f"edit {program_name}")
+        time.sleep(0.1) # Đợi robot phản hồi và vào Editor Mode
 
+        # Bước 2: Xóa tất cả các dòng hiện có trong chương trình
+        # Chuyển đến dòng đầu tiên
+        self.send_cmd("S 1")
+        time.sleep(0.05)
+        # Xóa một số lượng lớn các bước từ dòng hiện tại trở đi để làm sạch hoàn toàn chương trình
+        self.send_cmd("D 9999") # D 9999 sẽ xóa 9999 dòng từ dòng hiện tại. [5.1, 98]
+        time.sleep(0.1) # Đợi quá trình xóa hoàn tất
+
+        # Bước 3: Đọc và chèn các dòng chương trình mới
+        file_path = "E:/2. GE/24. Kawasaki Robot/code/robot_weld_vision_demo/gerobot.pg"
+        with open(file_path, "r") as file:
+            lines = file.readlines()
+            # Bỏ dòng đầu tiên (.PROGRAM tên_chương_trình) và dòng cuối cùng (.END)
+            # vì lệnh EDIT và E đã xử lý phần này
+            program_content_lines = []
+            for line in lines[1:-1]:
+                stripped_line = line.strip()
+                if stripped_line: # Chỉ thêm các dòng không trống
+                    program_content_lines.append(stripped_line)
+
+        # Chèn từng dòng nội dung mới vào chương trình trống
+        # Editor mode sẽ tự động tăng số bước sau mỗi lần gửi lệnh
+        for line_content in program_content_lines:
+            self.send_cmd(line_content)
+            time.sleep(0.05) # Thêm độ trễ nhỏ giữa các lệnh để robot xử lý
+
+        # Bước 4: Thoát chế độ soạn thảo
+        self.send_cmd("e")
+        time.sleep(0.1) # Đợi robot thoát Editor Mode
+
+        print(f"Chương trình '{program_name}' đã được tải thành công với {len(program_content_lines)} dòng.")
+
+    
     def execute_program(self, program_name):
         return self.send_cmd(f"execute {program_name}")
+    
+    def delete_program(self, program_name):
+        return self.send_cmd(f"delete/P {program_name}")
 
     def hold_program(self):
         return self.send_cmd("hold")
@@ -80,97 +138,14 @@ class RobotController:
     def stop_program(self):
         return self.send_cmd("ABORT")
     
-def calibrate_kawasaki_base_from_3_points(p0, p1, p2):
-    """
-    Tính base TRANS(x, y, z, o, a, t) từ 3 điểm robot: p0 (origin), p1 (trục X), p2 (trục XY)
-
-    Args:
-        p0: gốc hệ tọa độ mới, dạng (x, y, z)
-        p1: điểm trên trục X
-        p2: điểm trên mặt phẳng X-Y
-
-    Returns:
-        Chuỗi TRANS(x, y, z, o, a, t)
-    """
-
-    # Chuyển về vector numpy
-    p0 = np.array(p0)
-    p1 = np.array(p1)
-    p2 = np.array(p2)
-
-    # Vector trục X mới
-    x_vec = p1 - p0
-    x_vec = x_vec / np.linalg.norm(x_vec)
-
-    # Vector phụ
-    temp_vec = p2 - p0
-
-    # Trục Z = X × temp_vec
-    z_vec = np.cross(x_vec, temp_vec)
-    z_vec = z_vec / np.linalg.norm(z_vec)
-
-    # Trục Y = Z × X
-    y_vec = np.cross(z_vec, x_vec)
-
-    # Ma trận quay: cột là [x, y, z]
-    R_mat = np.column_stack((x_vec, y_vec, z_vec))
-
-    # Chuyển thành OAT (Euler ZYZ)
-    r = R.from_matrix(R_mat)
-    o, a, t = r.as_euler('ZYZ', degrees=True)
-
-    # Lấy vị trí gốc
-    x, y, z = p0
-
-    return f"TRANS({x:.3f}, {y:.3f}, {z:.3f}, {o:.3f}, {a:.3f}, {t:.3f})"
-
-def calibrate_transformation_from_3points(camera_points, robot_points):
-    """
-    Tính TRANS(x, y, z, o, a, t) từ 3 điểm tương ứng giữa hệ camera và hệ robot.
-
-    Args:
-        camera_points: List 3 điểm camera [[x0,y0,z0], [x1,y1,z1], [x2,y2,z2]]
-        robot_points: List 3 điểm robot  [[x0,y0,z0], [x1,y1,z1], [x2,y2,z2]]
-
-    Returns:
-        (x, y, z, o, a, t): tọa độ robot theo chuẩn Kawasaki
-    """
-
-    cam = np.array(camera_points, dtype=np.float64)
-    rob = np.array(robot_points, dtype=np.float64)
-
-    # 1. Gốc tọa độ
-    cam_origin = cam[0]
-    rob_origin = rob[0]
-
-    # 2. Trục X: từ P0 → P1
-    cam_x = cam[1] - cam[0]
-    rob_x = rob[1] - rob[0]
-
-    # 3. Trục Z: pháp tuyến mặt P0-P1-P2
-    cam_z = np.cross(cam[1] - cam[0], cam[2] - cam[0])
-    rob_z = np.cross(rob[1] - rob[0], rob[2] - rob[0])
-
-    # 4. Trục Y: vuông góc X-Z
-    cam_y = np.cross(cam_z, cam_x)
-    rob_y = np.cross(rob_z, rob_x)
-
-    # Chuẩn hóa trục
-    def normalize(v):
-        return v / np.linalg.norm(v)
-
-    R_cam = np.column_stack([normalize(cam_x), normalize(cam_y), normalize(cam_z)])
-    R_rob = np.column_stack([normalize(rob_x), normalize(rob_y), normalize(rob_z)])
-
-    # 5. Ma trận quay từ camera → robot
-    R_transform = R_rob @ R_cam.T  # Vì: R_cam * V_cam = V_local => V_rob = R_rob * V_local
-
-    # 6. Vector tịnh tiến
-    T = rob_origin - R_transform @ cam_origin
-
-    # 7. Chuyển thành góc OAT (Euler ZYZ)
-    r = R.from_matrix(R_transform)
-    o, a, t = r.as_euler('ZYZ', degrees=True)
-
-    x, y, z = T
-    return x, y, z, o, a, t
+    def status_robot(self):
+        response = self.send_cmd("TYPE TASK(1)")
+        # Tách các dòng trong phản hồi
+        lines = response.splitlines()
+        for line in lines:
+            line = line.strip()
+            # Bỏ qua dòng lệnh và dấu nhắc, chỉ lấy dòng là số
+            if line.isdigit():
+                return int(line)
+        print("Không tìm thấy trạng thái robot hợp lệ trong phản hồi.")
+        return None

@@ -10,8 +10,12 @@ class ProcessModel:
         return model.predict(image, conf=0.6)
     
     def r_d(self, image):
-        img1 = cv2.imread(image)
-        img = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+        img1 = image.copy()
+        # Luôn truyền ảnh màu vào YOLO
+        if len(image.shape) == 2:  # ảnh grayscale
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        elif image.shape[2] == 1:  # ảnh có shape (H, W, 1)
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         results = self.predict(image)
         for idx, result in enumerate(results):
             if result.masks is None:
@@ -31,13 +35,17 @@ class ProcessModel:
                 M = cv2.getRotationMatrix2D(center_part_image_org, angle_part_image_org, 1.0)
                 
                 # 3. Xoay toàn ảnh
-                rotated = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+                rotated = cv2.warpAffine(img1, M, (img1.shape[1], img1.shape[0]))
                 
                 # 4. Crop vùng rectangle đã xoay
                 x_crop, y_crop = int(center_part_image_org[0] - size[0] / 2), int(center_part_image_org[1] - size[1] / 2)
                 w, h = size
                 crop = rotated[y_crop:y_crop+h, x_crop:x_crop+w]
-                
+                if len(crop.shape) == 3:
+                    crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+                else:
+                    crop = crop
+                                
                 _, thresh = cv2.threshold(crop, 200, 255, cv2.THRESH_BINARY)
                 contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 
@@ -81,5 +89,4 @@ class ProcessModel:
                             return center_part_image_org,(([tuple(map(int,rotate_point(box[0]))), tuple(map(int,rotate_point(box[1])))]),([tuple(map(int,rotate_point(box[2]))), tuple(map(int,rotate_point(box[3])))]))
 
         return None, None
-                
                 
