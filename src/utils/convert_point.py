@@ -195,157 +195,214 @@ def euler_xyz_to_oat(rx, ry, rz):
     o, a, t = r.as_euler('ZYZ', degrees=True)
     return o, a, t
 
-def create_program(file_path, program_name, line1, line2, line3, line4, rz_line1, rz_line2, rz_line3, rz_line4, center):
+def create_program(file_path = "gerobot.pg", program_name = "gerobot", line1 = None, line2 = None, line3 = None, line4 = None,line5 = None, line6= None,
+                   line7 = None, line8 = None, rz_line1 = None, rz_line2 = None, rz_line3 = None, rz_line4 = None, center= None):
     with open(file_path, 'w') as file:
         file.write(f".PROGRAM {program_name}()\n")
         file.write(f"   SPEED 30\n")
         file.write(f"   ACCURACY 1\n")
         file.write(f"   BASE TRANS(434.862, 151.696, -285.698, 0.823, 179.381, -89.907)\n")
-        file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
-
+        if center is not None:
+            file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
         #line1
-        # file.write(f"   TDRAW 0,0,0,{rz_line1[0]:.3f},{rz_line1[1]:.3f},{rz_line1[2]:.3f}\n")
-        
-        # file.write(f"   JMOVE #PPOINT(83.746,2.863,-118.671,32.778,-59.441,-11.882)\n")
-        file.write(f"   DRIVE 6,{rz_line1:.3f},40\n")
-        file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+        if line1 is not None:
+            if rz_line1 is None:
+                rz_line1 = 30
+            file.write(f"   DRIVE 6,{rz_line1:.3f},70\n")
+            file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+            file.write(f"   DRIVE 6,{-rz_line1:.3f},70\n")
 
-        file.write(f"   BREAK\n")
-        file.write(f"   POINT current_pose = HERE\n")
-        file.write(f"   current_O = DEXT(current_pose, 4)\n")
-        file.write(f"   current_A = DEXT(current_pose, 5)\n")
-        file.write(f"   current_T = DEXT(current_pose, 6)\n")
+            file.write(f"   BREAK\n")
+            file.write(f"   POINT current_pose = HERE\n")
+            file.write(f"   current_O = DEXT(current_pose, 4)\n")
+            file.write(f"   current_A = DEXT(current_pose, 5)\n")
+            file.write(f"   current_T = DEXT(current_pose, 6)\n")
         
-        x, y = line1[0]
-        file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200.000,current_O,current_A,current_T)\n")
-        for point in line1:
-            x, y = point
-            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
-        x, y = line1[-1] # toa do cuoi cung cua line 1
-        file.write(f"   JMOVE TRANS({x+30:.3f},{y-30:.3f},-200,0,0,0)\n")
+            x, y = line1[0]
+            file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200.000,current_O,current_A,current_T)\n")
+            for point in line1:
+                x, y = point
+                file.write(f"   LMOVE TRANS({x+2:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
+            x, y = line1[-1] # toa do cuoi cung cua line 1
+            file.write(f"   JMOVE TRANS({x+30:.3f},{y-30:.3f},-200,0,0,0)\n")
         
-        # file.write(f"   POINT #current_joint_pose = HERE\n")
-        # file.write(f"   BREAK\n")
-        # file.write(f"   ang1 = DEXT(#current_joint_pose, 1)\n")  # Lấy giá trị của JT1 [9.1, 486]
-        # file.write(f"   ang2 = DEXT(#current_joint_pose, 2)\n")  # Lấy giá trị của JT2 [9.1, 486]
-        # file.write(f"   ang3 = DEXT(#current_joint_pose, 3)\n")  # Lấy giá trị của JT3 [9.1, 486]
-        # # Bỏ qua JT4 vì bạn muốn đặt nó bằng 0.0
-        # file.write(f"   ang5 = DEXT(#current_joint_pose, 5)\n")  # Lấy giá trị của JT5 [9.1, 486]
-        # # Bỏ qua JT6 vì bạn muốn đặt nó bằng 0.0
+        if line2 is not None:
+            #line2
+            # file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
+            if rz_line2 is None:
+                rz_line2 = 210
+            if rz_line2 > 180:
+                rz_line2 = -(360-rz_line2)
+            file.write(f"   DRIVE 6,{rz_line2:.3f},70\n")
+            file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+            # file.write(f"   DRIVE 6,{rz_line2:.3f},40\n")
+            file.write(f"   BREAK\n")
+            file.write(f"   POINT current_pose = HERE\n")
+            file.write(f"   current_O = DEXT(current_pose, 4)\n")
+            file.write(f"   current_A = DEXT(current_pose, 5)\n")
+            file.write(f"   current_T = DEXT(current_pose, 6)\n")
+        
+            x, y = line2[0]
+            file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200.000,current_O,current_A,current_T)\n")
+            for point in line2:
+                x, y = point
+                file.write(f"   LMOVE TRANS({x-7:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
+            x, y = line2[-1] # toa do cuoi cung cua line 2
+            file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200,0,0,0)\n")
+            
+            #line3
+        if line3 is not None:
+            file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
+            if rz_line3 is None:
+                rz_line3 = 170
+            rz_line3 = -360 + rz_line3
+            file.write(f"   DRIVE 6,{rz_line3:.3f},70\n")
+            file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+            # file.write(f"   DRIVE 6,{-rz_line3:.3f},40\n")
+            file.write(f"   BREAK\n")
+            file.write(f"   POINT current_pose = HERE\n")
+            file.write(f"   current_O = DEXT(current_pose, 4)\n")
+            file.write(f"   current_A = DEXT(current_pose, 5)\n")
+            file.write(f"   current_T = DEXT(current_pose, 6)\n")
+        
+            x, y = line3[0]
+            file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-90.000,current_O,current_A,current_T)\n")
+            
+            for point in line3:
+                x, y = point
+                file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
+            
+            file.write(f"   DRIVE 6,150,70\n")
+            x, y = line3[-1] # toa do cuoi cung cua line 3
+            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
+            
+            file.write(f"   POINT #current_joint_pose = HERE\n")
+            file.write(f"   BREAK\n")
+            file.write(f"   .ang4 = DEXT(#current_joint_pose, 4)\n")
+            file.write(f"   .ang6 = DEXT(#current_joint_pose, 6)\n")
+            file.write(f"   IF .ang6 > 250 OR .ang6 < -250 THEN\n")
+            file.write(f"   drive 6,-.ang6,30\n")
+            file.write(f"   END\n")
+            file.write(f"   IF .ang4 > 250 OR .ang4 < -250 THEN\n")
+            file.write(f"   drive 4,-.ang4,30\n")
+            file.write(f"   END\n")
 
-        # # Tạo tư thế mục tiêu mới, đặt JT4 và JT6 về 0.0
-        # file.write(f"   POINT #target_pose = #PPOINT(ang1, 35.0, -117, 0.0, ang5, 0.0)\n")
-        # file.write(f"   JMOVE #target_pose\n") 
+        if line4 is not None:    
+            #line4
+            # file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
+            if rz_line4 is None:
+                rz_line4 = 170
+            file.write(f"   DRIVE 6,{rz_line4:.3f},70\n")
+            file.write(f"   TDRAW 0,0,0,30,0,0\n")
+            file.write(f"   DRIVE 6,{-rz_line4:.3f},70\n")
+            file.write(f"   BREAK\n")
+            file.write(f"   POINT current_pose = HERE\n")
+            file.write(f"   current_O = DEXT(current_pose, 4)\n")
+            file.write(f"   current_A = DEXT(current_pose, 5)\n")
+            file.write(f"   current_T = DEXT(current_pose, 6)\n")
+            
+            
+            x, y = line4[0]
+            file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-90.000,current_O,current_A,current_T)\n")
+            for point in line4:
+                x, y = point
+                file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
+            x, y = line4[-1] # toa do cuoi cung cua line 4
+            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
         
-        #line2
-        file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
-        # file.write(f"   TDRAW 0,0,0,{rz_line2[0]:.3f},{rz_line2[1]:.3f},{rz_line2[2]:.3f}\n")
-        # file.write(f"   JMOVE #PPOINT(54.405,14.229,-106.685,-28.001,-77.133,40.881)\n")
-        file.write(f"   DRIVE 6,{rz_line2:.3f},40\n")
-        file.write(f"   TDRAW 0,0,0,-30,0,0\n")
-        file.write(f"   BREAK\n")
-        file.write(f"   POINT current_pose = HERE\n")
-        file.write(f"   current_O = DEXT(current_pose, 4)\n")
-        file.write(f"   current_A = DEXT(current_pose, 5)\n")
-        file.write(f"   current_T = DEXT(current_pose, 6)\n")
+        if line6 is not None:
+            #line2
+            # file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
+            if rz_line2 is None:
+                rz_line2 = 210
+            if rz_line2 > 180:
+                rz_line2 = -(360-rz_line2)
+            file.write(f"   DRIVE 6,{rz_line2:.3f},70\n")
+            file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+            file.write(f"   DRIVE 6,{-rz_line2:.3f},70\n")
+            file.write(f"   BREAK\n")
+            file.write(f"   POINT current_pose = HERE\n")
+            file.write(f"   current_O = DEXT(current_pose, 4)\n")
+            file.write(f"   current_A = DEXT(current_pose, 5)\n")
+            file.write(f"   current_T = DEXT(current_pose, 6)\n")
+            
+            # x, y,_ = line6[0]
+            # file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200.000,current_O,current_A,current_T)\n")
+            for point in line6:
+                x, y, z = point
+                file.write(f"   LMOVE TRANS({x-5:.3f},{y-5:.3f},{z:.3f},current_O,current_A,current_T)\n")
+            for point in line8:
+                x, y, z = point
+                file.write(f"   LMOVE TRANS({x-4:.3f},{y+4:.3f},{z:.3f},current_O,current_A,current_T)\n")
+            x, y, z = line8[-1] # toa do cuoi cung cua line 4
+            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
         
-        x, y = line2[0]
-        file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200.000,current_O,current_A,current_T)\n")
-        for point in line2:
-            x, y = point
-            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
-        x, y = line2[-1] # toa do cuoi cung cua line 2
-        file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200,0,0,0)\n")
-        
-        
-        
-        # file.write(f"   ang2 = DEXT(#current_joint_pose, 2)\n")  # Lấy giá trị của JT2 [9.1, 486]
-        # file.write(f"   ang3 = DEXT(#current_joint_pose, 3)\n")  # Lấy giá trị của JT3 [9.1, 486]
-        # # Bỏ qua JT4 vì bạn muốn đặt nó bằng 0.0
-        # file.write(f"   ang5 = DEXT(#current_joint_pose, 5)\n")  # Lấy giá trị của JT5 [9.1, 486]
-        # # Bỏ qua JT6 vì bạn muốn đặt nó bằng 0.0
+        if line5 is not None:
+            if rz_line1 is None:
+                rz_line1 = 30
+            file.write(f"   DRIVE 6,{rz_line1:.3f},70\n")
+            file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+            file.write(f"   DRIVE 6,{-rz_line1:.3f},70\n")
 
-        # # Tạo tư thế mục tiêu mới, đặt JT4 và JT6 về 0.0
-        # file.write(f"   POINT #target_pose = #PPOINT(ang1, 35.0, -117, 0.0, ang5, 0.0)\n")
-        # file.write(f"   JMOVE #target_pose\n") 
+            file.write(f"   BREAK\n")
+            file.write(f"   POINT current_pose = HERE\n")
+            file.write(f"   current_O = DEXT(current_pose, 4)\n")
+            file.write(f"   current_A = DEXT(current_pose, 5)\n")
+            file.write(f"   current_T = DEXT(current_pose, 6)\n")
+            
+            x, y,_ = line5[0]
+            file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-100.000,current_O,current_A,current_T)\n")
+            for point in line5:
+                x, y, z = point
+                file.write(f"   LMOVE TRANS({x:.3f},{y-3:.3f},{z:.3f},current_O,current_A,current_T)\n")
+            for point in line7:
+                x, y, z = point
+                file.write(f"   LMOVE TRANS({x:.3f},{y+5:.3f},{z:.3f},current_O,current_A,current_T)\n")
+            x, y, z = line7[-1] # toa do cuoi cung cua line 4
+            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
+        # if line8 is not None:
+        #     #line2
+        #     # file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
+        #     if rz_line2 is None:
+        #         rz_line2 = 210
+        #     if rz_line2 > 180:
+        #         rz_line2 = -(360-rz_line2)
+        #     file.write(f"   DRIVE 6,{rz_line2:.3f},40\n")
+        #     file.write(f"   TDRAW 0,0,0,-30,0,0\n")
+        #     file.write(f"   BREAK\n")
+        #     file.write(f"   POINT current_pose = HERE\n")
+        #     file.write(f"   current_O = DEXT(current_pose, 4)\n")
+        #     file.write(f"   current_A = DEXT(current_pose, 5)\n")
+        #     file.write(f"   current_T = DEXT(current_pose, 6)\n")
+            
+        #     x, y,_ = line8[0]
+        #     file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200.000,current_O,current_A,current_T)\n")
+        #     for point in line8:
+        #         x, y, z = point
+        #         file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},{z:.3f},current_O,current_A,current_T)\n")
+        #     x, y, z = line8[-1] # toa do cuoi cung cua line 4
+        #     file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
         
-        #line3
-        file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
-        # file.write(f"   TDRAW 0,0,0,{rz_line3[0]:.3f},{rz_line3[1]:.3f},{rz_line3[2]:.3f}\n")
-        # file.write(f"   JMOVE #PPOINT(67.313,-8.635,-128.794,-15.144,-37.345,32.202)\n")
-        
-        file.write(f"   DRIVE 6,{rz_line3:.3f},40\n")
-        file.write(f"   TDRAW 0,0,0,-30,0,0\n")
-        file.write(f"   BREAK\n")
-        file.write(f"   POINT current_pose = HERE\n")
-        file.write(f"   current_O = DEXT(current_pose, 4)\n")
-        file.write(f"   current_A = DEXT(current_pose, 5)\n")
-        file.write(f"   current_T = DEXT(current_pose, 6)\n")
-        
-        x, y = line3[0]
-        file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-90.000,current_O,current_A,current_T)\n")
-        
-        for point in line3:
-            x, y = point
-            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
-        
-        file.write(f"   DRIVE 6,150,40\n")
-        x, y = line3[-1] # toa do cuoi cung cua line 3
-        file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
-        
-        file.write(f"   POINT #current_joint_pose = HERE\n")
-        file.write(f"   BREAK\n")
-        file.write(f"   ang4 = DEXT(#current_joint_pose, 4)\n")
-        file.write(f"   drive 4,-ang4,30\n")
-        
-        
-        # file.write(f"   POINT #current_joint_pose = HERE\n")
-        # file.write(f"   BREAK\n")
-        # file.write(f"   ang1 = DEXT(#current_joint_pose, 1)\n")  # Lấy giá trị của JT1 [9.1, 486]
-        # file.write(f"   ang2 = DEXT(#current_joint_pose, 2)\n")  # Lấy giá trị của JT2 [9.1, 486]
-        # file.write(f"   ang3 = DEXT(#current_joint_pose, 3)\n")  # Lấy giá trị của JT3 [9.1, 486]
-        # # Bỏ qua JT4 vì bạn muốn đặt nó bằng 0.0
-        # file.write(f"   ang5 = DEXT(#current_joint_pose, 5)\n")  # Lấy giá trị của JT5 [9.1, 486]
-        # # Bỏ qua JT6 vì bạn muốn đặt nó bằng 0.0
+        # if line7 is not None:
+        #     if rz_line1 is None:
+        #         rz_line1 = 30
+        #     file.write(f"   DRIVE 6,{rz_line1:.3f},40\n")
+        #     file.write(f"   TDRAW 0,0,0,-30,0,0\n")
 
-        # # Tạo tư thế mục tiêu mới, đặt JT4 và JT6 về 0.0
-        # file.write(f"   POINT #target_pose = #PPOINT(ang1, 35.0, -117, 0.0, ang5, 0.0)\n") 
-        # file.write(f"   JMOVE #target_pose\n") 
-        
-        #line4
-        file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
-        # file.write(f"   TDRAW 0,0,0,{rz_line4[0]:.3f},{rz_line4[1]:.3f},{rz_line4[2]:.3f}\n")
-        # file.write(f"   JMOVE #PPOINT(74.050,19.047,-98.010,5.708,-84.421,13.585)\n")
-        file.write(f"   DRIVE 6,{rz_line4:.3f},40\n")
-        file.write(f"   TDRAW 0,0,0,30,0,0\n")
-        file.write(f"   BREAK\n")
-        file.write(f"   POINT current_pose = HERE\n")
-        file.write(f"   current_O = DEXT(current_pose, 4)\n")
-        file.write(f"   current_A = DEXT(current_pose, 5)\n")
-        file.write(f"   current_T = DEXT(current_pose, 6)\n")
-        x, y = line4[0]
-        file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-90.000,current_O,current_A,current_T)\n")
-        for point in line4:
-            x, y = point
-            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
-        x, y = line4[-1] # toa do cuoi cung cua line 4
-        file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
-        
-        # file.write(f"   POINT #current_joint_pose = HERE\n")
-        # file.write(f"   BREAK\n")
-        # file.write(f"   ang1 = DEXT(#current_joint_pose, 1)\n")  # Lấy giá trị của JT1 [9.1, 486]
-        # file.write(f"   ang2 = DEXT(#current_joint_pose, 2)\n")  # Lấy giá trị của JT2 [9.1, 486]
-        # file.write(f"   ang3 = DEXT(#current_joint_pose, 3)\n")  # Lấy giá trị của JT3 [9.1, 486]
-        # # Bỏ qua JT4 vì bạn muốn đặt nó bằng 0.0
-        # file.write(f"   ang5 = DEXT(#current_joint_pose, 5)\n")  # Lấy giá trị của JT5 [9.1, 486]
-        # # Bỏ qua JT6 vì bạn muốn đặt nó bằng 0.0
+        #     file.write(f"   BREAK\n")
+        #     file.write(f"   POINT current_pose = HERE\n")
+        #     file.write(f"   current_O = DEXT(current_pose, 4)\n")
+        #     file.write(f"   current_A = DEXT(current_pose, 5)\n")
+        #     file.write(f"   current_T = DEXT(current_pose, 6)\n")
+            
+        #     x, y,_ = line7[0]
+        #     file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200.000,current_O,current_A,current_T)\n")
+        #     for point in line7:
+        #         x, y, z = point
+        #         file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},{z:.3f},current_O,current_A,current_T)\n")
+        #     x, y, z = line7[-1] # toa do cuoi cung cua line 4
+        #     file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
 
-        # # Tạo tư thế mục tiêu mới, đặt JT4 và JT6 về 0.0
-        
-        # file.write(f"   POINT #target_pose = #PPOINT(ang1, 35.0, -117, 0.0, ang5, 0.0)\n") 
-        # file.write(f"   JMOVE #target_pose\n") 
-        
-        # file.write(f"   JMOVE TRANS({center[0]:.3f},{center[1]:.3f},-300,0,0,0)\n")
         file.write(f"   JMOVE TRANS(-126,192,-266,0,0,0)\n")
         file.write(f".END\n")
         

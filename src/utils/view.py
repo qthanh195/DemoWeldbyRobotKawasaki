@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+# from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 def draw_robot_points(points, mode='2d', show_axes=True):
@@ -143,9 +143,6 @@ def draw_tcp_frame(ax, origin, x_dir, y_dir, z_dir=None, length=10, label='TCP')
     ax.text(*(origin + x_dir * length * 1.1), f'{label}_X', color='r')
     ax.text(*(origin + y_dir * length * 1.1), f'{label}_Y', color='g')
     ax.text(*(origin + z_dir * length * 1.1), f'{label}_Z', color='b')
-    
-
-
 
 def to_3d(pt):
     pt = np.array(pt)
@@ -185,20 +182,75 @@ def show_points_with_xyz_axes(points, x_dirs, y_dirs, z_dirs=None, length=2):
     ax.legend()
     plt.show()
     
-def show_points_3d(points, color='red', marker='o'):
-    """
-    Hiển thị các điểm 3D đơn giản, không vẽ hướng.
-    points: list of (x, y, z)
-    """
-    fig = plt.figure()
+def show_points_3d(points, ax=None, scatter=None):
+    import matplotlib.pyplot as plt
+    if ax is None or scatter is None:
+        plt.ion()
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.set_xlim(-250, 150)
+        ax.set_ylim(-250, 150)
+        ax.set_zlim(-200, 200)
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.set_title('Robot Points 3D')
+        xs, ys, zs = zip(*points)
+        scatter = ax.scatter(xs, ys, zs, c='red', marker='o')
+        plt.show(block=False)
+        return ax, scatter
+    else:
+        xs, ys, zs = zip(*points)
+        scatter._offsets3d = (xs, ys, zs)
+        plt.draw()
+        plt.pause(0.01)
+        return ax, scatter
+    
+def realtime_3d_plot_init():
+    plt.ion()
+    fig = plt.figure(figsize=(12, 10))
     ax = fig.add_subplot(111, projection='3d')
-    xs, ys,zs = zip(*points)
-    ax.scatter(xs, ys, zs, c=color, marker=marker)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    ax.set_title('Robot Points 3D')
     ax.set_xlim(-250, 150)
     ax.set_ylim(-250, 150)
     ax.set_zlim(-200, 200)
-    plt.show()
+    ax.set_title('Points trong không gian 3D', fontsize=16, fontweight='bold')
+    return fig, ax
+
+# def realtime_3d_plot_update(ax, keypoints):
+#     z_values = np.zeros(len(keypoints))
+#     ax.cla()  # Xóa trục cũ
+#     ax.set_xlabel('X')
+#     ax.set_ylabel('Y')
+#     ax.set_zlabel('Z')
+#     ax.set_xlim(-250, 150)
+#     ax.set_ylim(-250, 150)
+#     ax.set_zlim(-200, 200)
+#     ax.set_title('Points trong không gian 3D', fontsize=16, fontweight='bold')
+#     ax.scatter(keypoints[:, 0], keypoints[:, 1], z_values, c='red', s=100, marker='o')
+#     indices = [0, 1, 2, 3]
+#     ax.plot(keypoints[indices, 0], keypoints[indices, 1], z_values[indices], 'b-')
+#     plt.draw()
+#     plt.pause(0.01)
+
+def realtime_3d_plot_update(ax, keypoints):
+    """
+    Cập nhật plot 3D realtime với các điểm có đủ x, y, z.
+    keypoints: numpy array shape (N, 3)
+    """
+    ax.cla()  # Xóa trục cũ
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_xlim(-250, 150)
+    ax.set_ylim(-250, 150)
+    ax.set_zlim(-200, 200)
+    ax.set_title('Points trong không gian 3D', fontsize=16, fontweight='bold')
+    # Vẽ các điểm với giá trị z thực
+    ax.scatter(keypoints[:, 0], keypoints[:, 1], keypoints[:, 2], c='red', s=50, marker='o')
+    # Nối các điểm theo thứ tự
+    # ax.plot(keypoints[:, 0], keypoints[:, 1], keypoints[:, 2], 'b-')
+    plt.draw()
+    plt.pause(0.01)

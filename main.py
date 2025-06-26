@@ -6,16 +6,18 @@ from src.utils.view import *
 
 import threading
 import numpy as np
+import time
 
 def Process():
+    fig, ax = realtime_3d_plot_init()
+    z = -5
     while True:
-        z = -5
+        start_time = time.time()
         # Khởi tạo camera và robot
         camera = BaslerCamera()
         camera.open_camera()
         
         image = camera.get_image()
-        # image = cv2.imread("E:/2. GE/24. Kawasaki Robot/image1/img_20250614_181118.png")
         cv2.imwrite("test.png", image)
         camera.close_camera()
         if image is None:
@@ -34,55 +36,50 @@ def Process():
         if points1_robot[0][0] < points2_robot[0][0]:
             points1_robot, points2_robot = points2_robot, points1_robot
         
-        line1_oat = build_tcp_orientation_from_points(np.array([linea[0][0][0],linea[0][0][1],z]), 
-                                                    np.array([linea[0][1][0],linea[0][1][1],z]), 
-                                                    np.array([center_part[0],center_part[1],z]), 160)
-        line2_oat = build_tcp_orientation_from_points(np.array([linea[1][0][0],linea[1][0][1],z]), 
-                                                    np.array([linea[1][1][0],linea[1][1][1],z]), 
-                                                    np.array([center_part[0],center_part[1],z]), -40)
-        
         points3_robot = [pixel_to_robot(p) for p in generate_points_on_line(lineb[0][0], lineb[0][1], 70)]
         points4_robot = [pixel_to_robot(p) for p in generate_points_on_line(lineb[1][0], lineb[1][1], 70)]
         
         #kiểm tra points3_robot và points4_robot xem cạnh nào nằm trên thì nó là points3_robot
         if points3_robot[0][0] > points4_robot[0][0]:
             points3_robot, points4_robot = points4_robot, points3_robot
-        
-        line3_oat = build_tcp_orientation_from_points(np.array([lineb[0][0][0],lineb[0][0][1],z]),
-                                                    np.array([lineb[1][0][0],lineb[1][0][1],z]),
-                                                    np.array([center_part[0],center_part[1],z]), 20)
-        line4_oat = build_tcp_orientation_from_points(np.array([lineb[1][0][0],lineb[1][0][1],z]),
-                                                    np.array([lineb[1][1][0],lineb[1][1][1],z]),
-                                                    np.array([center_part[0],center_part[1],z]), 20)
 
         rz_line1 = angle_between_two_lines(((0,0),(500,0)), (linea[0][0], linea[0][1]))
         rz_line2 = angle_between_two_lines(((0,0),(500,0)), (linea[1][0], linea[1][1]))
         rz_line3 = angle_between_two_lines(((0,0),(500,0)), (lineb[0][0], lineb[0][1]))
         rz_line4 = angle_between_two_lines(((0,0),(500,0)), (lineb[1][0], lineb[1][1]))
         
-        # line1_oat = euler_xyz_to_oat(0,0,-30)
-        # line2_oat = euler_xyz_to_oat(0,0,30)
-        # line3_oat = euler_xyz_to_oat(0,0,-30)
-        # line4_oat = euler_xyz_to_oat(0,0,30)
+        print("rz_line1: ", rz_line1)
+        print("rz_line2: ", rz_line2)
+        print("rz_line3: ", rz_line3)
+        print("rz_line4: ", rz_line4)
         
-        # create_program("gerobot.pg", "gerobot",line1 = points1_robot,
-        #                line2 = points2_robot, line3 = points3_robot, line4 = points4_robot,
-        #                rz_line1 = line1_oat, rz_line2 = line2_oat,rz_line3 = line3_oat, rz_line4 = line4_oat,
-        #                center = pixel_to_robot(center_part))
+        point_line5_robot = points3_robot[0]
+        point_line6_robot = points3_robot[-1]
+        point_line7_robot = points4_robot[0]
+        point_line8_robot = points4_robot[-1]
+        
+        line5_robot = []
+        line6_robot = []
+        line7_robot = []
+        line8_robot = []
+        
+        # line là danh sách điểm có x,y cố đinh = point_line5 và z thay đổi từ 5 đến 8 cách nhau 1
+        for i in range(5, 80, 10):
+            line5_robot.append((point_line5_robot[0], point_line5_robot[1], -i))
+        
+        for i in range(5, 80, 10):
+            line6_robot.append((point_line6_robot[0], point_line6_robot[1], -i))
+        for i in range(5, 80, 10):
+            line7_robot.append((point_line7_robot[0], point_line7_robot[1], -i))
+
+        for i in range(5, 80, 10):
+            line8_robot.append((point_line8_robot[0], point_line8_robot[1], -i))
+        
         create_program("gerobot.pg", "gerobot",line1 = points1_robot,
                     line2 = points2_robot, line3 = points3_robot, line4 = points4_robot,
                     rz_line1 = rz_line1, rz_line2 = rz_line2,rz_line3 = rz_line3, rz_line4 = rz_line4,
+                    line5 = line5_robot, line6 = line6_robot, line7 = line7_robot, line8 = line8_robot ,
                     center = pixel_to_robot(center_part))
-        
-
-
-
-        # thread_robot = threading.Thread(target=process_robot)
-        # thread_robot.start()
-        # thread_robot.join()
-        
-        
-
         
         point_line5 = points3_robot[0]
         line5 = []
@@ -91,6 +88,7 @@ def Process():
             line5.append((point_line5[0], point_line5[1], i))
             
         point_line6 = points3_robot[-1]
+        
         line6 = []
         # line là danh sách điểm có x,y cố đinh = point_line5 và z thay đổi từ 5 đến 40 cách nhau 5
         for i in range(5, 40, 7):
@@ -107,20 +105,17 @@ def Process():
         # line là danh sách điểm có x,y cố đinh = point_line5 và z thay đổi từ 5 đến 40 cách nhau 5
         for i in range(5, 40, 7):
             line8.append((point_line8[0], point_line8[1], i))
-
-        # print
-        
-        
+ 
         # danh sach cac diem
         points = []
         for p in points1_robot:
-            points.append((p[0], p[1], 5))
+            points.append((p[0], p[1], z))
         for p in points2_robot:
-            points.append((p[0], p[1], 5))
+            points.append((p[0], p[1], z))
         for p in points3_robot:
-            points.append((p[0], p[1], 5))
+            points.append((p[0], p[1], z))
         for p in points4_robot:
-            points.append((p[0], p[1], 5))
+            points.append((p[0], p[1], z))
         for p in line5:
                 points.append(p)
         for p in line6:
@@ -129,7 +124,6 @@ def Process():
                 points.append(p)
         for p in line8:
                 points.append(p)
-        
         
         points1 = generate_points_on_line(linea[0][0], linea[0][1], 70)
         points2 = generate_points_on_line(linea[1][0], linea[1][1], 70)
@@ -150,7 +144,6 @@ def Process():
                 "vx": line1['vx'],
                 "vy": line1['vy'],
             })
-
         line2_test = []
         for point in points2:
             line2_test.append({
@@ -184,25 +177,24 @@ def Process():
         draw_points_with_xy_direction(img, line2_test, 30, (0, 0, 255), (0, 255, 0))
         draw_points_with_xy_direction(img, line3_test, 30, (0, 0, 255), (0, 255, 0))
         draw_points_with_xy_direction(img, line4_test, 30, (0, 0, 255), (0, 255, 0))
-        # cv2.line(image, (linea[0][0][0],linea[0][0][1]), (linea[0][1][0],linea[0][1][1]), (0, 255, 0), 2)
-        # cv2.line(image, (linea[1][0][0],linea[1][0][1]), (linea[1][1][0],linea[1][1][1]), (0, 255, 0), 2)
         
-        # cv2.line(image, (lineb[1][0][0],lineb[1][0][1]), (lineb[1][1][0],lineb[1][1][1]), (0, 255, 0), 2)
-        # cv2.line(image, (lineb[0][0][0],lineb[0][0][1]), (lineb[0][1][0],lineb[0][1][1]), (0, 255, 0), 2)
-        # cv2.circle(image, (int(center_part[0]), int(center_part[1])), 10, (0, 0, 255), 2)
-        # cv2.line(image, (0, 1374), (3840, 1374), (0, 255, 0), 2)
-        # cv2.line(image, (1920, 0), (1920, 2748), (0, 255, 0), 2)
         cv2.imwrite("test.png", img)
-        resize = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+        resize = cv2.resize(img, (0, 0), fx=0.4, fy=0.4)
+        points = np.array(points)
         cv2.imshow("Image", resize)
-        show_points_3d(points)
+        
+        realtime_3d_plot_update(ax, points)
+        
+        thread_robot = threading.Thread(target=process_robot)
+        thread_robot.start()
+        thread_robot.join()
+        
+        print("thoi gian = ", time.time() - start_time)
         key = cv2.waitKey(0)  # Chờ nhấn phím bất kỳ
-        # plt.close()
         if key == 27:  # Nhấn ESC để thoát
             break
     cv2.destroyAllWindows()
        
-    
 def process_robot():
     import time
     bot = RobotController()
@@ -219,11 +211,4 @@ def process_robot():
     bot.disconnect_bot()
     
 if __name__ == "__main__":
-
     Process()
-        
-    # while True:
-    #     Process()
-    #     ti
-
-    # process_robot()

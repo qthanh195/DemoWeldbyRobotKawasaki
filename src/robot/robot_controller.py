@@ -114,7 +114,7 @@ class RobotController:
         # Editor mode sẽ tự động tăng số bước sau mỗi lần gửi lệnh
         for line_content in program_content_lines:
             self.send_cmd(line_content)
-            time.sleep(0.05) # Thêm độ trễ nhỏ giữa các lệnh để robot xử lý
+            time.sleep(0.01) # Thêm độ trễ nhỏ giữa các lệnh để robot xử lý
 
         # Bước 4: Thoát chế độ soạn thảo
         self.send_cmd("e")
