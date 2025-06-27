@@ -222,7 +222,7 @@ def create_program(file_path = "gerobot.pg", program_name = "gerobot", line1 = N
             file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-200.000,current_O,current_A,current_T)\n")
             for point in line1:
                 x, y = point
-                file.write(f"   LMOVE TRANS({x+2:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
+                file.write(f"   LMOVE TRANS({x+5:.3f},{y:.3f},-5.000,current_O,current_A,current_T)\n")
             x, y = line1[-1] # toa do cuoi cung cua line 1
             file.write(f"   JMOVE TRANS({x+30:.3f},{y-30:.3f},-200,0,0,0)\n")
         
@@ -280,10 +280,10 @@ def create_program(file_path = "gerobot.pg", program_name = "gerobot", line1 = N
             file.write(f"   BREAK\n")
             file.write(f"   .ang4 = DEXT(#current_joint_pose, 4)\n")
             file.write(f"   .ang6 = DEXT(#current_joint_pose, 6)\n")
-            file.write(f"   IF .ang6 > 250 OR .ang6 < -250 THEN\n")
+            file.write(f"   IF .ang6 > 200 OR .ang6 < -200 THEN\n")
             file.write(f"   drive 6,-.ang6,30\n")
             file.write(f"   END\n")
-            file.write(f"   IF .ang4 > 250 OR .ang4 < -250 THEN\n")
+            file.write(f"   IF .ang4 > 200 OR .ang4 < -200 THEN\n")
             file.write(f"   drive 4,-.ang4,30\n")
             file.write(f"   END\n")
 
@@ -333,9 +333,9 @@ def create_program(file_path = "gerobot.pg", program_name = "gerobot", line1 = N
                 file.write(f"   LMOVE TRANS({x-5:.3f},{y-5:.3f},{z:.3f},current_O,current_A,current_T)\n")
             for point in line8:
                 x, y, z = point
-                file.write(f"   LMOVE TRANS({x-4:.3f},{y+4:.3f},{z:.3f},current_O,current_A,current_T)\n")
+                file.write(f"   LMOVE TRANS({x-4:.3f},{y+6:.3f},{z:.3f},current_O,current_A,current_T)\n")
             x, y, z = line8[-1] # toa do cuoi cung cua line 4
-            file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
+            file.write(f"   LMOVE TRANS({x-4:.3f},{y:.3f},-90,0,0,0)\n")
         
         if line5 is not None:
             if rz_line1 is None:
@@ -351,13 +351,13 @@ def create_program(file_path = "gerobot.pg", program_name = "gerobot", line1 = N
             file.write(f"   current_T = DEXT(current_pose, 6)\n")
             
             x, y,_ = line5[0]
-            file.write(f"   JMOVE TRANS({x:.3f},{y:.3f},-100.000,current_O,current_A,current_T)\n")
+            file.write(f"   JMOVE TRANS({x+10:.3f},{y:.3f},-100.000,current_O,current_A,current_T)\n")
             for point in line5:
                 x, y, z = point
-                file.write(f"   LMOVE TRANS({x:.3f},{y-3:.3f},{z:.3f},current_O,current_A,current_T)\n")
+                file.write(f"   LMOVE TRANS({x:.3f},{y-4:.3f},{z:.3f},current_O,current_A,current_T)\n")
             for point in line7:
                 x, y, z = point
-                file.write(f"   LMOVE TRANS({x:.3f},{y+5:.3f},{z:.3f},current_O,current_A,current_T)\n")
+                file.write(f"   LMOVE TRANS({x:.3f},{y+7:.3f},{z:.3f},current_O,current_A,current_T)\n")
             x, y, z = line7[-1] # toa do cuoi cung cua line 4
             file.write(f"   LMOVE TRANS({x:.3f},{y:.3f},-90,0,0,0)\n")
         # if line8 is not None:

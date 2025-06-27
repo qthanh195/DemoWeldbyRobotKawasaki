@@ -173,16 +173,16 @@ class ProcessModel:
         if h_crop > w_crop:
             if zone_a_count > zone_b_count:
                 print("→ Bên trái nhiều hơn")
-                line3_a = (center_crop[0] + offset_a * width_wide, center_crop[1] - 691)
-                line3_b = (center_crop[0] + offset_a * width_wide, center_crop[1] + 691)
-                line4_a = (center_crop[0] + offset_b * width_narrow, center_crop[1] - 691)
-                line4_b = (center_crop[0] + offset_b * width_narrow, center_crop[1] + 691)
+                line3_a = (center_crop[0] + offset_a * width_wide, center_crop[1] - 693)
+                line3_b = (center_crop[0] + offset_a * width_wide, center_crop[1] + 693)
+                line4_a = (center_crop[0] + offset_b * width_narrow, center_crop[1] - 693)
+                line4_b = (center_crop[0] + offset_b * width_narrow, center_crop[1] + 693)
             else:
                 print("→ Bên phải nhiều hơn")
-                line3_a = (center_crop[0] + offset_a * width_narrow, center_crop[1] - 691)
-                line3_b = (center_crop[0] + offset_a * width_narrow, center_crop[1] + 691)
-                line4_a = (center_crop[0] + offset_b * width_wide, center_crop[1] - 691)
-                line4_b = (center_crop[0] + offset_b * width_wide, center_crop[1] + 691)
+                line3_a = (center_crop[0] + offset_a * width_narrow, center_crop[1] - 693)
+                line3_b = (center_crop[0] + offset_a * width_narrow, center_crop[1] + 693)
+                line4_a = (center_crop[0] + offset_b * width_wide, center_crop[1] - 693)
+                line4_b = (center_crop[0] + offset_b * width_wide, center_crop[1] + 693)
         else:
             if zone_a_count > zone_b_count:
                 print("→ Trên nhiều hơn")

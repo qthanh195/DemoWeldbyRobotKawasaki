@@ -1,5 +1,6 @@
+import matplotlib
+matplotlib.use('TkAgg')  # Đảm bảo dùng TkAgg
 import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 def draw_robot_points(points, mode='2d', show_axes=True):
@@ -206,7 +207,7 @@ def show_points_3d(points, ax=None, scatter=None):
         plt.pause(0.01)
         return ax, scatter
     
-def realtime_3d_plot_init():
+def realtime_3d_plot_init(x=0, y=0):
     plt.ion()
     fig = plt.figure(figsize=(12, 10))
     ax = fig.add_subplot(111, projection='3d')
@@ -217,6 +218,15 @@ def realtime_3d_plot_init():
     ax.set_ylim(-250, 150)
     ax.set_zlim(-200, 200)
     ax.set_title('Points trong không gian 3D', fontsize=16, fontweight='bold')
+    # Đặt vị trí cửa sổ
+    manager = plt.get_current_fig_manager()
+    try:
+        manager.window.wm_geometry(f"+{x}+{y}")
+    except AttributeError:
+        try:
+            manager.window.move(x, y)
+        except Exception:
+            pass
     return fig, ax
 
 # def realtime_3d_plot_update(ax, keypoints):

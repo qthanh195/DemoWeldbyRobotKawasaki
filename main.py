@@ -43,20 +43,43 @@ def Process():
         if points3_robot[0][0] > points4_robot[0][0]:
             points3_robot, points4_robot = points4_robot, points3_robot
 
-        rz_line1 = angle_between_two_lines(((0,0),(500,0)), (linea[0][0], linea[0][1]))
-        rz_line2 = angle_between_two_lines(((0,0),(500,0)), (linea[1][0], linea[1][1]))
-        rz_line3 = angle_between_two_lines(((0,0),(500,0)), (lineb[0][0], lineb[0][1]))
-        rz_line4 = angle_between_two_lines(((0,0),(500,0)), (lineb[1][0], lineb[1][1]))
+        rz_line1 = angle_between_two_lines(((0,0),(3000,0)), (linea[0][0], linea[0][1]))
+        rz_line2 = angle_between_two_lines(((0,0),(3000,0)), (linea[1][0], linea[1][1]))
+        rz_line3 = angle_between_two_lines(((0,0),(3000,0)), (lineb[0][0], lineb[0][1]))
+        rz_line4 = angle_between_two_lines(((0,0),(3000,0)), (lineb[1][0], lineb[1][1]))
         
         print("rz_line1: ", rz_line1)
         print("rz_line2: ", rz_line2)
-        print("rz_line3: ", rz_line3)
+        print("rz_line3: ", rz_line3)     
         print("rz_line4: ", rz_line4)
         
         point_line5_robot = points3_robot[0]
         point_line6_robot = points3_robot[-1]
         point_line7_robot = points4_robot[0]
         point_line8_robot = points4_robot[-1]
+        
+        #  đảm bảo point_line5_robot nằm trên bên phải, point_line6_robot nằm trên bên trái, point_line7_robot nằm dưới bên , point_line8_robot nằm dưới bên trái
+        # Gom các điểm lại
+        all_points = [points3_robot[0], points3_robot[-1], points4_robot[0], points4_robot[-1]]
+
+        # Sắp xếp theo trục Y (từ nhỏ đến lớn => trên trước, dưới sau)
+        sorted_by_y = sorted(all_points, key=lambda p: p[1])
+
+        # 2 điểm trên cùng (Y nhỏ nhất)
+        top_points = sorted_by_y[:2]
+        # 2 điểm dưới cùng (Y lớn hơn)
+        bottom_points = sorted_by_y[2:]
+
+        # Với mỗi nhóm, sắp theo trục X để biết trái/phải
+        top_points_sorted = sorted(top_points, key=lambda p: p[0])     # trái -> phải
+        bottom_points_sorted = sorted(bottom_points, key=lambda p: p[0])  # trái -> phải
+
+        # Gán lại đúng vị trí mong muốn
+        point_line6_robot = top_points_sorted[0]  # trên trái
+        point_line5_robot = top_points_sorted[1]  # trên phải
+        point_line8_robot = bottom_points_sorted[0]  # dưới trái
+        point_line7_robot = bottom_points_sorted[1]  # dưới phải
+
         
         line5_robot = []
         line6_robot = []
